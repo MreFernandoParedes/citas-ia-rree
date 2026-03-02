@@ -1,12 +1,13 @@
-﻿import base64
+import base64
 import calendar
+import os
 import sqlite3
 from datetime import date, datetime
 from pathlib import Path
 
 import streamlit as st
 
-DB_PATH = "citas.db"
+DB_PATH = os.getenv("DB_PATH", "citas.db")
 SLOTS = ["09:00-10:00", "10:00-11:00", "11:00-12:00", "15:00-16:00", "16:00-17:00"]
 MARCH_MONTH = 3
 
@@ -29,6 +30,8 @@ DIRECTIONS = {
 }
 
 def get_conn():
+    db_parent = Path(DB_PATH).parent
+    db_parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
@@ -632,6 +635,11 @@ def apply_formal_styles(is_login: bool):
         color: #f0f4fa !important;
         text-align: left !important;
     }
+    /* Avoid browser password manager prompts: keep as text input and mask visually. */
+    div[data-testid="stForm"] div[data-testid="stTextInput"] input[type="text"] {
+        -webkit-text-security: disc;
+        text-security: disc;
+    }
     </style>
     """
     login_css = login_css.replace("__LOGIN_BG_CSS__", login_bg_css)
@@ -669,7 +677,7 @@ def login_view():
     with form_col:
         with st.form("login_form", clear_on_submit=False):
             password = (
-                st.text_input("Clave", type="password", autocomplete="new-password")
+                st.text_input("Clave", type="default", autocomplete="off")
                 .strip()
                 .upper()
             )
@@ -1174,6 +1182,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
