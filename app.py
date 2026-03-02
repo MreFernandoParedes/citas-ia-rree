@@ -668,7 +668,11 @@ def login_view():
     _, form_col, _ = st.columns([2, 4, 2])
     with form_col:
         with st.form("login_form", clear_on_submit=False):
-            password = st.text_input("Clave", type="password").strip().upper()
+            password = (
+                st.text_input("Clave", type="password", autocomplete="new-password")
+                .strip()
+                .upper()
+            )
             submitted = st.form_submit_button("Ingresar", use_container_width=True)
 
     if submitted:
@@ -1170,6 +1174,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
