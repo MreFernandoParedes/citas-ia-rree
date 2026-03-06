@@ -100,6 +100,12 @@ def init_db(year: int):
     conn.close()
 
 
+@st.cache_resource(show_spinner=False)
+def ensure_db_initialized(year: int, db_path: str):
+    # Run schema/month bootstrap once per process and year.
+    init_db(year)
+
+
 def fetch_coordinator(code: str):
     conn = get_conn()
     row = conn.execute(
@@ -459,18 +465,19 @@ def get_logo_base64():
     logo_path = Path("assets/logo_mre.png")
     fallback_logo = Path("logo_mre.png")
     selected_logo = logo_path if logo_path.exists() else fallback_logo
-
-    if not selected_logo.exists():
-        return None
-
-    return base64.b64encode(selected_logo.read_bytes()).decode("utf-8")
+    return get_image_base64(selected_logo.as_posix())
 
 
 def get_login_background_base64():
-    bg_path = Path("assets/fondoia.png")
-    if not bg_path.exists():
+    return get_image_base64("assets/fondoia.png")
+
+
+@st.cache_data(show_spinner=False)
+def get_image_base64(path_str: str):
+    image_path = Path(path_str)
+    if not image_path.exists():
         return None
-    return base64.b64encode(bg_path.read_bytes()).decode("utf-8")
+    return base64.b64encode(image_path.read_bytes()).decode("utf-8")
 
 
 def render_persistent_logo():
@@ -1181,7 +1188,7 @@ def main():
     )
 
     year = datetime.now().year
-    init_db(year)
+    ensure_db_initialized(year, DB_PATH)
 
     if "auth_code" not in st.session_state:
         st.session_state.auth_code = None
